@@ -33,8 +33,10 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     # user apps
     'drinks',
+    'users',
     # installed
     'rest_framework',
+    'rest_framework.authtoken',
     # inital
     'django.contrib.admin',
     'django.contrib.auth',
