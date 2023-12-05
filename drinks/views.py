@@ -37,6 +37,11 @@ def drink_list(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([TokenAuthentication])
 def drink_detail(request, drink_id):
+    def raise_has_no_access():
+        if request.user.is_authenticated and (request.user.username == drink.createdBy.username):
+            return True
+        raise APIException("Not Authorized")
+
     try:
         drink = Drink.objects.get(pk=drink_id)
     except Drink.DoesNotExist:
@@ -46,19 +51,21 @@ def drink_detail(request, drink_id):
         case 'GET':
             serializer = DrinkSerializer(drink)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
+
         case 'PUT':
-            if request.user.is_authenticated and (request.user.username == drink.createdBy.username):
-                serializer = DrinkSerializer(drink, data=request.data)
-                serializer.is_valid(raise_exception=True)
-                serializer.save()
-                return Response(serializer.data)
-            # ???
-            # is this the correct form?
-            raise APIException("Not Authorized")
+            raise_has_no_access()
+            serializer = DrinkSerializer(drink, data=request.data)
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data)
+
 
         case 'DELETE':
-            if request.user.is_authenticated and (request.user.username == drink.createdBy.username):
-                drink.delete()
-                return Response(status = status.HTTP_204_NO_CONTENT)
-            raise APIException("Not Authorized")
+            raise_has_no_access()
+            drink.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+
+        case _:
+            raise APIException("Internal Error")
+
+
