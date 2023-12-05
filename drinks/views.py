@@ -1,6 +1,8 @@
 # django
 from django.shortcuts import render
 from django.http import JsonResponse
+from django.db.models import Q
+from django.contrib.auth.models import AnonymousUser
 
 # rest framework
 from rest_framework.decorators import api_view, authentication_classes
@@ -26,10 +28,11 @@ class UnauthorizedException(APIException):
 @authentication_classes([TokenAuthentication])
 def drink_list(request):
     if request.method == 'GET':
-        drinks = Drink.objects.filter(is_publishable=True).all()
+        drinks = Drink.objects.filter(Q(is_publishable=True) | Q(createdBy=request.user.id)).all()
         serializer = DrinkSerializer(drinks, many=True)
         return Response(serializer.data)
 
+    print(request.user.is_anonymous)
     if request.user.is_authenticated:
         request.data["createdBy"] = request.user.id
         request.data['uuid'] = create_uuid()
@@ -53,6 +56,10 @@ def drink_detail(request, drink_id):
         drink = Drink.objects.get(uuid=drink_id)
     except Drink.DoesNotExist:
         raise APIException("No such Drink!")
+
+
+    if (not drink.is_publishable) and drink.createdBy != request.user:
+        raise APIException("Unauthorized Access!")
 
     match request.method:
         case 'GET':
