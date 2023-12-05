@@ -4,7 +4,11 @@ from .models import Drink
 
 
 class DrinkSerializer(serializers.ModelSerializer):
-    # describing the model
+    # ???
+    # did it but don't know how it works
+    creator = serializers.CharField(source='createdBy.username', read_only=True)
     class Meta:
         model = Drink
-        fields = ['id', 'name', 'description', 'createdBy']
+        fields = ['uuid', 'name', 'description', 'createdBy', 'is_publishable', 'creator']
+
+        extra_kwargs = {'createdBy': {'write_only': True}}

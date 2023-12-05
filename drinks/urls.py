@@ -6,5 +6,5 @@ from . import views
 
 urlpatterns = [
     path('', views.drink_list),
-    path('<int:drink_id>', views.drink_detail),
+    path('<drink_id>', views.drink_detail),
 ]

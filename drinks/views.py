@@ -13,25 +13,32 @@ from rest_framework import status
 from .models import Drink
 from .serializers import DrinkSerializer
 
+# dev imports
+from .helpers import create_uuid
+
+
+# How to customize this for 401 and 403
+class UnauthorizedException(APIException):
+    status_code = 401
+    default_detail = 'Please Login to perform this task.'
 
 @api_view(['GET', 'POST'])
 @authentication_classes([TokenAuthentication])
 def drink_list(request):
     if request.method == 'GET':
-        drinks = Drink.objects.all()
+        drinks = Drink.objects.filter(is_publishable=True).all()
         serializer = DrinkSerializer(drinks, many=True)
         return Response(serializer.data)
 
     if request.user.is_authenticated:
         request.data["createdBy"] = request.user.id
+        request.data['uuid'] = create_uuid()
         serializer = DrinkSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    # ???
-    # how to give status code
-    raise APIException("Not authenticated.")
+    raise UnauthorizedException()
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -40,10 +47,10 @@ def drink_detail(request, drink_id):
     def raise_has_no_access():
         if request.user.is_authenticated and (request.user.username == drink.createdBy.username):
             return True
-        raise APIException("Not Authorized")
+        raise UnauthorizedException()
 
     try:
-        drink = Drink.objects.get(pk=drink_id)
+        drink = Drink.objects.get(uuid=drink_id)
     except Drink.DoesNotExist:
         raise APIException("No such Drink!")
 
