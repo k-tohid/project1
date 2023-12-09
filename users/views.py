@@ -21,6 +21,8 @@ def login(request):
         return Response({"details": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
     token, is_created = Token.objects.get_or_create(user=user)
+    # ???
+    # is instance necessary here
     serializer = UserSerializer(instance=user)
     return Response({"token": token.key, "user": serializer.data})
 

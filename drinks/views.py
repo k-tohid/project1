@@ -20,9 +20,11 @@ from .helpers import create_uuid
 
 
 # How to customize this for 401 and 403
-class UnauthorizedException(APIException):
-    status_code = 401
-    default_detail = 'Please Login to perform this task.'
+class MyException(APIException):
+    def __init__(self, status_code, default_detail):
+        self.status_code = status_code
+        self.default_detail = default_detail
+
 
 @api_view(['GET', 'POST'])
 @authentication_classes([TokenAuthentication])
@@ -32,16 +34,15 @@ def drink_list(request):
         serializer = DrinkSerializer(drinks, many=True)
         return Response(serializer.data)
 
-    print(request.user.is_anonymous)
-    if request.user.is_authenticated:
-        request.data["createdBy"] = request.user.id
-        request.data['uuid'] = create_uuid()
-        serializer = DrinkSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    if not request.user.is_authenticated:
+        raise MyException(401, "Please Login.")
 
-    raise UnauthorizedException()
+    request.data["createdBy"] = request.user.id
+    request.data['uuid'] = create_uuid()
+    serializer = DrinkSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
@@ -50,16 +51,15 @@ def drink_detail(request, drink_id):
     def raise_has_no_access():
         if request.user.is_authenticated and (request.user.username == drink.createdBy.username):
             return True
-        raise UnauthorizedException()
+        raise MyException(403, "UnAuthorized.")
 
     try:
         drink = Drink.objects.get(uuid=drink_id)
     except Drink.DoesNotExist:
-        raise APIException("No such Drink!")
-
+        raise MyException(404, "No such Drink!")
 
     if (not drink.is_publishable) and drink.createdBy != request.user:
-        raise APIException("Unauthorized Access!")
+        raise MyException(403, "Unauthorized Access!")
 
     match request.method:
         case 'GET':
@@ -73,13 +73,10 @@ def drink_detail(request, drink_id):
             serializer.save()
             return Response(serializer.data)
 
-
         case 'DELETE':
             raise_has_no_access()
             drink.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         case _:
-            raise APIException("Internal Error")
-
-
+            raise MyException(500, "Internal Error")
