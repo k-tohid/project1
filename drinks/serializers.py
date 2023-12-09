@@ -8,6 +8,11 @@ class DrinkSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['uuid'] = create_uuid()
         validated_data['createdBy'] = self.context.get('user')
+        # ****************** added below ****************
+        name = validated_data['name']
+        if name.startswith('Al.'):
+            name = name.replace('Al.', 'Alcoholic drink!,')
+            validated_data['name'] = name
         return super().create(validated_data)
     creator = serializers.CharField(source='createdBy.username', read_only=True)
     class Meta:
