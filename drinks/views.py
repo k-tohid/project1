@@ -53,7 +53,6 @@ def drink_detail(request, drink_uuid):
 
     try:
         drink = Drink.objects.get(q)
-        print(drink)
     except Drink.DoesNotExist:
         raise MyException(404, "No such Drink!")
 
