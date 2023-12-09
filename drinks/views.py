@@ -28,7 +28,13 @@ def drink_list(request):
     # ???
     # why this code results in 7 queries?
     if request.method == 'GET':
-        drinks = Drink.objects.filter(Q(is_publishable=True) | Q(createdBy=request.user.id))
+        # should I hide private objects in here even to the owner?
+        q = Q(is_publishable=True)
+        # is this nested if ok? better way?
+        if request.user.is_authenticated:
+            q |= Q(createdBy=request.user.id)
+
+        drinks = Drink.objects.filter(q)
         serializer = DrinkSerializer(drinks, many=True)
         return Response(serializer.data)
 
