@@ -15,11 +15,7 @@ from rest_framework import status
 from .models import Drink
 from .serializers import DrinkSerializer
 
-# dev imports
-from .helpers import create_uuid
 
-
-# How to customize this for 401 and 403
 class MyException(APIException):
     def __init__(self, status_code, detail):
         self.status_code = status_code
@@ -37,9 +33,8 @@ def drink_list(request):
     if not request.user.is_authenticated:
         raise MyException(401, "Please Login.")
 
-    request.data["createdBy"] = request.user.id
-    request.data['uuid'] = create_uuid()
-    serializer = DrinkSerializer(data=request.data)
+    context = {'user': request.user}
+    serializer = DrinkSerializer(data=request.data, context=context)
     serializer.is_valid(raise_exception=True)
     serializer.save()
     return Response(serializer.data, status=status.HTTP_201_CREATED)
