@@ -6,5 +6,7 @@ from . import views
 
 urlpatterns = [
     path('', views.drink_list),
-    path('<drink_id>', views.drink_detail),
+    path('<drink_uuid>', views.drink_detail),
+    path('private/<drink_uuid>', views.drink_detail),
+
 ]
