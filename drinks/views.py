@@ -25,6 +25,8 @@ class MyException(APIException):
 @api_view(['GET', 'POST'])
 @authentication_classes([TokenAuthentication])
 def drink_list(request):
+    # ???
+    # why this code results in 7 queries?
     if request.method == 'GET':
         drinks = Drink.objects.filter(Q(is_publishable=True) | Q(createdBy=request.user.id))
         serializer = DrinkSerializer(drinks, many=True)
