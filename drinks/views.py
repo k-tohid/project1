@@ -3,6 +3,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.db.models import Q
 from django.contrib.auth.models import AnonymousUser
+from django.core.cache import cache
 
 # rest framework
 from rest_framework.decorators import api_view, authentication_classes
@@ -11,10 +12,15 @@ from rest_framework.response import Response
 from rest_framework.exceptions import APIException
 from rest_framework import status
 
+import time
+import redis
+
 # apps
 from .models import Drink
 from .serializers import DrinkSerializer
 
+
+# redis_instance = redis.StrictRedis(host='127.0.0.1', port=6379, db=1)
 
 class MyException(APIException):
     def __init__(self, status_code, detail):
@@ -34,8 +40,15 @@ def drink_list(request):
         if request.user.is_authenticated:
             q |= Q(createdBy=request.user.id)
 
-        drinks = Drink.objects.filter(q)
+        if q in cache:
+            drinks = cache.get(q)
+        else:
+            drinks = Drink.objects.filter(q)
+
         serializer = DrinkSerializer(drinks, many=True)
+        # ???
+        # what is 60*60
+        cache.set(q, serializer.data, timeout=60*60)
         return Response(serializer.data)
 
     if not request.user.is_authenticated:
