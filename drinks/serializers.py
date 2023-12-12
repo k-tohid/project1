@@ -5,18 +5,21 @@ from .helpers import create_uuid
 
 
 class DrinkSerializer(serializers.ModelSerializer):
+    creator = serializers.CharField(source='createdBy.username', read_only=True)
+
+    class Meta:
+        model = Drink
+        fields = ['uuid', 'name', 'description', 'price', 'is_publishable', 'creator']
+        read_only_fields = ['uuid', 'creator']
+
     def create(self, validated_data):
         validated_data['uuid'] = create_uuid()
         validated_data['createdBy'] = self.context.get('user')
-        # ****************** added below ****************
-        name = validated_data['name']
-        if name.startswith('Al.'):
-            name = name.replace('Al.', 'Alcoholic drink!,')
-            validated_data['name'] = name
         return super().create(validated_data)
-    creator = serializers.CharField(source='createdBy.username', read_only=True)
-    class Meta:
-        model = Drink
-        fields = ['uuid', 'name', 'description', 'createdBy', 'is_publishable', 'creator']
 
-        extra_kwargs = {'createdBy': {'write_only': True}, 'uuid': {'read_only': True}}
+    def to_representation(self, instance):
+        """Warns about alcoholic drinks"""
+        drink = super().to_representation(instance)
+        if drink['name'].startswith('Al.'):
+            drink['name'] = drink['name'].replace('Al.', 'Not for pregnant people,')
+        return drink

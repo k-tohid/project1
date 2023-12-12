@@ -8,7 +8,7 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework.exceptions import APIException
 from rest_framework import status
-
+from rest_framework.pagination import PageNumberPagination
 
 # apps
 from .models import Drink
@@ -25,15 +25,29 @@ class MyException(APIException):
 @authentication_classes([TokenAuthentication])
 def drink_list(request):
     if request.method == 'GET':
+        print(request.query_params)
 
         q = Q(is_publishable=True)
         if request.user.is_authenticated:
             q |= Q(createdBy=request.user.id)
 
-        drinks = Drink.objects.filter(q)
-        serializer = DrinkSerializer(drinks, many=True)
+        # ???
+        # not elegant, is there a better way?
+        if request.query_params.get('price') == 'minPrice':
+            drinks = Drink.objects.select_related().filter(q).order_by('price')
+        elif request.query_params.get('price') == 'maxPrice':
+            drinks = Drink.objects.select_related().filter(q).order_by('-price')
+        else:
+            drinks = Drink.objects.select_related().filter(q)
 
-        return Response(serializer.data)
+        paginator = PageNumberPagination()
+        paginator.page_size = 5
+        result_page = paginator.paginate_queryset(drinks, request)
+        serializer = DrinkSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+        # serializer = DrinkSerializer(drinks, many=True)
+        # return Response(serializer.data)
 
     if not request.user.is_authenticated:
         raise MyException(401, "Please Login.")

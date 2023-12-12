@@ -132,6 +132,7 @@ INTERNAL_IPS = [
     # ...
 ]
 
+# redis caching
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
@@ -142,4 +143,10 @@ CACHES = {
     }
 }
 
+# use custom user
 AUTH_USER_MODEL = 'users.CustomUser'
+
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 5
+}
