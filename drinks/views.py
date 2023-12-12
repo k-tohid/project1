@@ -31,24 +31,21 @@ class MyException(APIException):
 @api_view(['GET', 'POST'])
 @authentication_classes([TokenAuthentication])
 def drink_list(request):
-    # ???
-    # why this code results in 7 queries?
+
     if request.method == 'GET':
-        # should I hide private objects in here even to the owner?
+
         q = Q(is_publishable=True)
-        # is this nested if ok? better way?
         if request.user.is_authenticated:
             q |= Q(createdBy=request.user.id)
 
-        if q in cache:
-            drinks = cache.get(q)
-        else:
-            drinks = Drink.objects.filter(q)
+        # if q in cache:
+        #     drinks = cache.get(q)
+        # else:
 
+        drinks = Drink.objects.filter(q)
         serializer = DrinkSerializer(drinks, many=True)
-        # ???
-        # what is 60*60
-        cache.set(q, serializer.data, timeout=60*60)
+
+        # cache.set(q, serializer.data, timeout=60*60)
         return Response(serializer.data)
 
     if not request.user.is_authenticated:

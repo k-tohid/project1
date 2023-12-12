@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.contrib.auth.models import User
+from .models import CustomUser
 from django.shortcuts import get_object_or_404
 
 # rest_framework
@@ -16,7 +17,7 @@ from .serializers import UserSerializer
 
 @api_view(['POST'])
 def login(request):
-    user = get_object_or_404(User, username=request.data['username'])
+    user = get_object_or_404(CustomUser, username=request.data['username'])
     if not user.check_password(request.data['password']):
         return Response({"details": "Not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -34,7 +35,7 @@ def signup(request):
     serializer.save()
 
     # save the password manually to hash it.
-    user = User.objects.get(username=request.data['username'])
+    user = CustomUser.objects.get(username=request.data['username'])
     user.set_password(request.data['password'])
     user.save()
     token = Token.objects.create(user=user)
