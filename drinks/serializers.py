@@ -5,16 +5,16 @@ from .helpers import create_uuid
 
 
 class DrinkSerializer(serializers.ModelSerializer):
-    creator = serializers.CharField(source='createdBy.username', read_only=True)
+    creator = serializers.CharField(source='created_by.username', read_only=True)
 
     class Meta:
         model = Drink
-        fields = ['uuid', 'name', 'description', 'price', 'is_publishable', 'creator']
-        read_only_fields = ['uuid', 'creator']
+        fields = ['uuid', 'name', 'description', 'price', 'is_publishable', 'creator', 'created_on']
+        read_only_fields = ['uuid', 'creator', 'created_on']
 
     def create(self, validated_data):
         validated_data['uuid'] = create_uuid()
-        validated_data['createdBy'] = self.context.get('user')
+        validated_data['created_by'] = self.context.get('user')
         return super().create(validated_data)
 
     def to_representation(self, instance):

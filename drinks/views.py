@@ -1,3 +1,5 @@
+from datetime import datetime
+
 # django
 from django.db.models import Q
 from django.core.cache import cache
@@ -25,20 +27,24 @@ class MyException(APIException):
 @authentication_classes([TokenAuthentication])
 def drink_list(request):
     if request.method == 'GET':
-        print(request.query_params)
 
         q = Q(is_publishable=True)
         if request.user.is_authenticated:
-            q |= Q(createdBy=request.user.id)
+            q |= Q(created_by=request.user.id)
 
-        # ???
-        # not elegant, is there a better way?
-        if request.query_params.get('price') == 'minPrice':
-            drinks = Drink.objects.select_related().filter(q).order_by('price')
-        elif request.query_params.get('price') == 'maxPrice':
-            drinks = Drink.objects.select_related().filter(q).order_by('-price')
-        else:
-            drinks = Drink.objects.select_related().filter(q)
+        # query search parameters
+        if request.query_params.get('creator'):
+            q &= Q(created_by__username=request.query_params.get('creator'))
+        if request.query_params.get('createdOn'):
+            # format 2023-12-16
+            date = datetime.strptime(request.query_params.get('createdOn'), '%Y-%m-%d')
+            q &= Q(created_on__date=date)
+        if request.query_params.get('minPrice'):
+            q &= Q(price__gte=request.query_params.get('minPrice'))
+        if request.query_params.get('maxPrice'):
+            q &= Q(price__lte=request.query_params.get('maxPrice'))
+
+        drinks = Drink.objects.select_related().filter(q).order_by('created_on')
 
         paginator = PageNumberPagination()
         paginator.page_size = 5
@@ -73,7 +79,7 @@ def drink_detail(request, drink_uuid):
     if 'private/' not in request.get_full_path():
         q &= Q(is_publishable=True)
     else:
-        q &= Q(createdBy=request.user.id)
+        q &= Q(created_by=request.user.id)
 
     try:
         drink = Drink.objects.get(q)
@@ -84,7 +90,7 @@ def drink_detail(request, drink_uuid):
     match request.method:
         case 'GET':
             serializer = DrinkSerializer(drink)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_200_OK)
 
         case 'PUT':
             serializer = DrinkSerializer(drink, data=request.data)

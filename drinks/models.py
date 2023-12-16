@@ -10,8 +10,8 @@ class Drink(models.Model):
     description = models.CharField(max_length=500)
     price = models.FloatField(blank=False)
     is_publishable = models.BooleanField(default=True)
-    createdBy = models.ForeignKey(CustomUser, on_delete=models.CASCADE, default=None)
-    createdOn = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, default=None)
+    created_on = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return self.name
