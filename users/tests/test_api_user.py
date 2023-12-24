@@ -1,8 +1,5 @@
 import pytest
-
-# URLS -> users URL
-USER_SIGNUP_URL = 'http://127.0.0.1:8000/users/signup'
-USER_LOGIN_URL = 'http://127.0.0.1:8000/users/login'
+from django.urls import reverse
 
 
 @pytest.mark.django_db
@@ -12,7 +9,7 @@ def test_user_signup(client):
         'password': 'password'
     }
 
-    response = client.post(USER_SIGNUP_URL, user_info)
+    response = client.post(reverse('user_signup'), user_info)
     data = response.data
 
     assert response.status_code == 201
@@ -28,7 +25,7 @@ def test_user_signup_incomplete_info(client):
         'username': 'test'
     }
 
-    response = client.post(USER_SIGNUP_URL, user_info)
+    response = client.post(reverse('user_signup'), user_info)
 
     assert response.status_code == 400
 
@@ -41,9 +38,9 @@ def test_user_login(client):
     }
 
     # create user
-    client.post(USER_SIGNUP_URL, user_info)
+    client.post(reverse('user_signup'), user_info)
     # login user
-    response = client.post(USER_LOGIN_URL, user_info)
+    response = client.post(reverse('user_login'), user_info)
     data = response.data
 
     assert response.status_code == 200

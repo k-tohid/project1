@@ -1,15 +1,7 @@
 import pytest
+from django.urls import reverse
 
 from rest_framework.test import APIClient
-
-# URLS -> drink urls
-DRINK_LIST_URL = 'http://127.0.0.1:8000/drinks/'
-DRINK_DETAIL_URL = 'http://127.0.0.1:8000/drinks/'
-DRINK_PRIVATE_DETAIL_URL = 'http://127.0.0.1:8000/private/drinks/'
-
-# URLS -> users URL
-USER_SIGNUP_URL = 'http://127.0.0.1:8000/users/signup'
-USER_LOGIN_URL = 'http://127.0.0.1:8000/users/login'
 
 
 @pytest.fixture
@@ -24,7 +16,7 @@ def signup_user(client):
         'password': 'password'
     }
 
-    response = client.post(USER_SIGNUP_URL, user_info)
+    response = client.post(reverse('user_signup'), user_info)
     data = response.data
 
     return data['token']
@@ -36,7 +28,7 @@ def create_new_drink(client, signup_user):
     drink_info = {'name': 'test', 'description': 'new test drink', 'price': 1.0}
 
     headers = {'AUTHORIZATION': 'Token ' + token}
-    client.post(DRINK_LIST_URL, drink_info, headers=headers)
+    client.post(reverse('drink_list'), drink_info, headers=headers)
 
     return token
 
@@ -53,6 +45,6 @@ def create_5_drink(client, signup_user):
     headers = {'AUTHORIZATION': 'Token ' + token}
 
     for drink in drink_info:
-        client.post(DRINK_LIST_URL, drink, headers=headers)
+        client.post(reverse('drink_list'), drink, headers=headers)
 
     return token
