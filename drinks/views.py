@@ -33,14 +33,18 @@ def drink_list(request):
             q |= Q(created_by=request.user.id)
 
         # query search parameters
-        if request.query_params.get('creator'):
-            q &= Q(created_by__username=request.query_params.get('creator'))
+        if creator_query := request.query_params.get('creator'):
+            q &= Q(created_by__username__contains=creator_query)
         if request.query_params.get('createdOn'):
             # format 2023-12-16
             date = datetime.strptime(request.query_params.get('createdOn'), '%Y-%m-%d')
             q &= Q(created_on__date=date)
-        if request.query_params.get('minPrice'):
-            q &= Q(price__gte=request.query_params.get('minPrice'))
+            # ************** ? *********************
+            # is this the correct way?
+        if min_price_query := request.query_params.get('minPrice'):
+            if not min_price_query.isdigit():
+                min_price_query = 0
+            q &= Q(price__gte=min_price_query)
         if request.query_params.get('maxPrice'):
             q &= Q(price__lte=request.query_params.get('maxPrice'))
 
