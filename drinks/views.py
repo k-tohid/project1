@@ -1,5 +1,3 @@
-from datetime import datetime
-
 # django
 from django.db.models import Q
 from django.core.cache import cache
@@ -15,6 +13,9 @@ from rest_framework.pagination import PageNumberPagination
 # apps
 from .models import Drink
 from .serializers import DrinkSerializer
+
+# helpers
+from .helpers import convert_date_to_gregorian
 
 
 class MyException(APIException):
@@ -35,9 +36,8 @@ def drink_list(request):
         # query search parameters
         if creator_query := request.query_params.get('creator'):
             q &= Q(created_by__username__contains=creator_query)
-        if request.query_params.get('createdOn'):
-            # format 2023-12-16
-            date = datetime.strptime(request.query_params.get('createdOn'), '%Y-%m-%d')
+        if date_query := request.query_params.get('createdOn'):
+            date = convert_date_to_gregorian(date_query)
             q &= Q(created_on__date=date)
             # ************** ? *********************
             # is this the correct way?
