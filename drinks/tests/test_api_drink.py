@@ -18,7 +18,7 @@ def test_create_new_drink(client, signup_user):
     response = client.post(reverse('drink_list'), drink_info, headers=headers)
     data = response.data
 
-    assert data['name'] == 'test'
-    assert data['description'] == 'new test drink'
-    assert data['price'] == 1.0
-    assert data['creator'] == 'test'
+    assert data['name'] == drink_info['name']
+    assert data['description'] == drink_info['description']
+    assert data['price'] == drink_info['price']
+    assert data['creator'] == drink_info['creator']

@@ -44,7 +44,7 @@ def drink_list(request):
         if request.query_params.get('maxPrice'):
             q &= Q(price__lte=request.query_params.get('maxPrice'))
 
-        drinks = Drink.objects.select_related().filter(q).order_by('created_on')
+        drinks = Drink.objects.select_related().filter(q)
 
         paginator = PageNumberPagination()
         paginator.page_size = 5

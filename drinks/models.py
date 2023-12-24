@@ -13,5 +13,8 @@ class Drink(models.Model):
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, default=None)
     created_on = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ('created_on',)
+
     def __str__(self):
         return self.name
