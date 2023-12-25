@@ -48,3 +48,23 @@ def test_user_login(client):
     assert 'user' in data
     assert 'password' not in data['user']
     assert data['user']['username'] == 'test'
+
+
+@pytest.mark.django_db
+def test_user_login_wrong_data(client):
+    user_info = {
+        'username': 'test',
+        'password': 'password'
+    }
+
+    # create user
+    client.post(reverse('user_signup'), user_info)
+    # login user
+    user_info_wrong = {
+        'username': 'test',
+        'password': 'wrong-password'
+    }
+    response = client.post(reverse('user_login'), user_info_wrong)
+    data = response.data
+
+    assert response.status_code != 200
