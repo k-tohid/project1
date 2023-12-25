@@ -36,9 +36,16 @@ def drink_list(request):
         # query search parameters
         if creator_query := request.query_params.get('creator'):
             q &= Q(created_by__username__contains=creator_query)
-        if date_query := request.query_params.get('createdOn'):
+
+        if date_query := request.query_params.get('createdOnFrom'):
             date = convert_date_to_gregorian(date_query)
-            q &= Q(created_on__date=date)
+            q &= Q(created_on__date__gte=date)
+
+        if date_query := request.query_params.get('createdOnTo'):
+            date = convert_date_to_gregorian(date_query)
+            q &= Q(created_on__date__lte=date)
+
+
             # ************** ? *********************
             # is this the correct way?
         if min_price_query := request.query_params.get('minPrice'):
@@ -48,7 +55,7 @@ def drink_list(request):
         if request.query_params.get('maxPrice'):
             q &= Q(price__lte=request.query_params.get('maxPrice'))
 
-        drinks = Drink.objects.select_related().filter(q)
+        drinks = Drink.objects.select_related('created_by').prefetch_related('images').filter(q)
 
         paginator = PageNumberPagination()
         paginator.page_size = 5
@@ -86,6 +93,8 @@ def drink_detail(request, drink_uuid):
         q &= Q(created_by=request.user.id)
 
     try:
+        # ****************************** ? ***************************************
+        # can i optimize here in regard to select related and prefetch related
         drink = Drink.objects.get(q)
         cache.set(drink_uuid, drink.id, timeout=60 * 60)
     except Drink.DoesNotExist:
