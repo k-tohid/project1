@@ -11,6 +11,7 @@ class DrinkImageSerializer(serializers.ModelSerializer):
 
 
 class DrinkSerializer(serializers.ModelSerializer):
+    name = serializers.SerializerMethodField()
     creator = serializers.CharField(source='created_by.username', read_only=True)
 
     images = DrinkImageSerializer(many=True, read_only=True)
@@ -26,6 +27,8 @@ class DrinkSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['uuid'] = create_uuid()
         validated_data['created_by'] = self.context.get('user')
+
+
 
         uploaded_images = validated_data.pop("uploaded_images")
         drink = Drink.objects.create(**validated_data)
@@ -43,3 +46,6 @@ class DrinkSerializer(serializers.ModelSerializer):
         if drink['name'].startswith('Al.'):
             drink['name'] = drink['name'].replace('Al.', 'Not for pregnant people,')
         return drink
+
+    def get_name(self, obj):
+        return 'Drink: ' + obj.name
