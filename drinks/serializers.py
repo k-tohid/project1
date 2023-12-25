@@ -28,12 +28,18 @@ class DrinkSerializer(serializers.ModelSerializer):
         validated_data['uuid'] = create_uuid()
         validated_data['created_by'] = self.context.get('user')
 
-        uploaded_images = validated_data.pop("uploaded_images")
         drink = Drink.objects.create(**validated_data)
-        print(validated_data)
 
-        for image in uploaded_images:
-            DrinkImage.objects.create(drink=drink, image=image)
+        if 'uploaded_images' in validated_data.keys():
+            uploaded_images = validated_data.pop("uploaded_images")
+
+            for image in uploaded_images:
+                DrinkImage.objects.create(drink=drink, image=image)
+
+
+
+        # for image in uploaded_images:
+        #     DrinkImage.objects.create(drink=drink, image=image)
 
         # return super().create(validated_data)
         return drink

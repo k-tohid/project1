@@ -17,7 +17,6 @@ def test_create_new_drink(client, signup_user):
     headers = {'AUTHORIZATION': 'Token ' + token}
     response = client.post(reverse('drink_list'), drink_info, headers=headers)
     data = response.data
-    print(response.data)
 
     # assert data['name'] == drink_info['name']
     assert data['description'] == drink_info['description']
