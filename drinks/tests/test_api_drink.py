@@ -25,3 +25,17 @@ def test_create_new_drink(client, signup_user):
     assert data['description'] == drink_info['description']
     assert data['price'] == drink_info['price']
     assert data['creator'] == 'test'
+
+
+@pytest.mark.django_db
+def test_delete_drink_without_authentication(client, signup_user):
+    token = signup_user
+    drink_info = {'name': 'test', 'description': 'new test drink', 'price': 1.0, 'is_publishable': True}
+
+    headers = {'AUTHORIZATION': 'Token ' + token}
+    response = client.post(reverse('drink_list'), drink_info, headers=headers)
+
+    del_response = client.delete(reverse('drink_detail', kwargs={'drink_uuid': response.data['uuid']}))
+
+    assert del_response.status_code == 403
+

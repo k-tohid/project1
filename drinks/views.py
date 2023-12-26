@@ -79,8 +79,8 @@ def drink_list(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([TokenAuthentication])
 def drink_detail(request, drink_uuid):
-    # ***************** ? ********************
-    # can i optimise this caching better?
+
+
     if drink_uuid in cache:
         drink_id = cache.get(drink_uuid)
         q = Q(pk=drink_id)
@@ -100,20 +100,31 @@ def drink_detail(request, drink_uuid):
     except Drink.DoesNotExist:
         raise MyException(404, "No such Drink!")
 
+    # ******************** ? *********************
+    # is this the correct way to forbid private methods
+    def has_permission():
+        if request.user.id == drink.created_by.id:
+            return True
+        return False
+
     match request.method:
         case 'GET':
             serializer = DrinkSerializer(drink)
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         case 'PUT':
-            serializer = DrinkSerializer(drink, data=request.data)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data)
+            if has_permission():
+                serializer = DrinkSerializer(drink, data=request.data)
+                serializer.is_valid(raise_exception=True)
+                serializer.save()
+                return Response(serializer.data)
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         case 'DELETE':
-            drink.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            if has_permission():
+                drink.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         case _:
             raise MyException(500, "Internal Error")
