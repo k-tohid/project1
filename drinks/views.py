@@ -73,6 +73,7 @@ def drink_list(request):
     serializer = DrinkSerializer(data=request.data, context=context)
     serializer.is_valid(raise_exception=True)
     serializer.save()
+    print('here three')
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
