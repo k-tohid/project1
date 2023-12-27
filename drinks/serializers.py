@@ -5,9 +5,20 @@ from .helpers import create_uuid
 
 
 class DrinkImageSerializer(serializers.ModelSerializer):
+    uploaded_images = serializers.ListField(child=serializers.ImageField(allow_empty_file=False, use_url=False),
+                                            write_only=True, required=False)
     class Meta:
         model = DrinkImage
-        fields = '__all__'
+        fields = ['image', 'uploaded_images']
+
+    def create(self, validated_data):
+        drink = self.context['drink']
+        images = validated_data['uploaded_images']
+
+        for image in images:
+            DrinkImage.objects.create(drink=drink, image=image)
+
+        return 1
 
 
 class DrinkSerializer(serializers.ModelSerializer):
@@ -28,23 +39,7 @@ class DrinkSerializer(serializers.ModelSerializer):
         validated_data['uuid'] = create_uuid()
         validated_data['created_by'] = self.context.get('user')
 
-        uploaded_images = []
-
-        if 'uploaded_images' in validated_data.keys():
-            uploaded_images = validated_data.pop("uploaded_images")
-
-        drink = Drink.objects.create(**validated_data)
-
-        for image in uploaded_images:
-            DrinkImage.objects.create(drink=drink, image=image)
-
-
-
-        # for image in uploaded_images:
-        #     DrinkImage.objects.create(drink=drink, image=image)
-
-        # return super().create(validated_data)
-        return drink
+        return super().create(validated_data)
 
     def to_representation(self, instance):
         """Warns about alcoholic drinks"""

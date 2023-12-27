@@ -21,7 +21,7 @@ def test_create_new_drink(client, signup_user):
 
     # ************** ? *********************
     # we get 'name': 'Drink: ' from serializer
-    # assert data['name'] == drink_info['name']
+    assert data['name'] == drink_info['name']
     assert data['description'] == drink_info['description']
     assert data['price'] == drink_info['price']
     assert data['creator'] == 'test'

@@ -12,7 +12,7 @@ from rest_framework.pagination import PageNumberPagination
 
 # apps
 from .models import Drink
-from .serializers import DrinkSerializer
+from .serializers import DrinkSerializer, DrinkImageSerializer
 
 # helpers
 from .helpers import convert_date_to_gregorian
@@ -45,14 +45,14 @@ def drink_list(request):
             date = convert_date_to_gregorian(date_query)
             q &= Q(created_on__date__lte=date)
 
-
-            # ************** ? *********************
-            # is this the correct way?
-        if min_price_query := request.query_params.get('minPrice'):
-            if not min_price_query.isdigit():
-                min_price_query = 0
+        # ************** ? *********************
+        # is this the correct way?
+        min_price_query = request.query_params.get('minPrice')
+        if min_price_query and min_price_query.isdigit():
             q &= Q(price__gte=min_price_query)
-        if request.query_params.get('maxPrice'):
+
+        max_price_query = request.query_params.get('maxPrice')
+        if max_price_query and max_price_query.isdigit():
             q &= Q(price__lte=request.query_params.get('maxPrice'))
 
         drinks = Drink.objects.select_related('created_by').prefetch_related('images').filter(q)
@@ -73,15 +73,12 @@ def drink_list(request):
     serializer = DrinkSerializer(data=request.data, context=context)
     serializer.is_valid(raise_exception=True)
     serializer.save()
-    print('here three')
     return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
 @authentication_classes([TokenAuthentication])
 def drink_detail(request, drink_uuid):
-
-
     if drink_uuid in cache:
         drink_id = cache.get(drink_uuid)
         q = Q(pk=drink_id)
@@ -129,3 +126,36 @@ def drink_detail(request, drink_uuid):
 
         case _:
             raise MyException(500, "Internal Error")
+
+
+@api_view(['POST'])
+@authentication_classes([TokenAuthentication])
+def drink_image(request, drink_uuid):
+
+    # only login users
+    if not request.user.is_authenticated:
+        raise MyException(401, "Please Login.")
+
+    if drink_uuid in cache:
+        drink_id = cache.get(drink_uuid)
+        q = Q(pk=drink_id)
+    else:
+        q = Q(uuid=drink_uuid)
+
+    try:
+        drink = Drink.objects.get(q)
+        cache.set(drink_uuid, drink.id, timeout=60 * 60)
+    except Drink.DoesNotExist:
+        raise MyException(404, "No such Drink!")
+
+    if not request.user.id == drink.created_by.id:
+        # ***************************************
+        # raise or return Response
+        # isn't response faster?
+        raise MyException(403, "Forbidden request.")
+
+    context = {'drink': drink}
+    serializer = DrinkImageSerializer(data=request.data, context=context)
+    serializer.is_valid(raise_exception=True)
+    serializer.save()
+    return Response(status=status.HTTP_201_CREATED)
