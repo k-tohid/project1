@@ -15,4 +15,4 @@ class DrinkAdmin(admin.ModelAdmin):
 
 @admin.register(DrinkImage)
 class DrinkImageAdmin(admin.ModelAdmin):
-    pass
+    readonly_fields = ['img_preview']

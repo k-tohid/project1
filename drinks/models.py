@@ -1,7 +1,9 @@
 from django.db import models
 
 from django.contrib.auth.models import User
+from django.utils.html import mark_safe
 from users.models import CustomUser
+
 
 
 class Drink(models.Model):
@@ -25,4 +27,7 @@ class DrinkImage(models.Model):
     image = models.ImageField(upload_to='drinks', null=True, blank=True)
 
     def __str__(self):
-        return self.drink
+        return self.drink.name
+
+    def img_preview(self):  # new
+        return mark_safe(f'<img src = "{self.image.url}" width = "300"/>')
