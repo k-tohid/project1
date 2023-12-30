@@ -22,6 +22,7 @@ class Drink(models.Model):
         return self.name
 
 
+
 class DrinkImage(models.Model):
     drink = models.ForeignKey(Drink, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='drinks', null=True, blank=True)
