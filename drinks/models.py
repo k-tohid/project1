@@ -5,7 +5,6 @@ from django.utils.html import mark_safe
 from users.models import CustomUser
 
 
-
 class Drink(models.Model):
     uuid = models.CharField(max_length=5, unique=True)
     name = models.CharField(max_length=200)
@@ -20,7 +19,6 @@ class Drink(models.Model):
 
     def __str__(self):
         return self.name
-
 
 
 class DrinkImage(models.Model):

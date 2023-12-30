@@ -7,6 +7,7 @@ from .helpers import create_uuid
 class DrinkImageSerializer(serializers.ModelSerializer):
     uploaded_images = serializers.ListField(child=serializers.ImageField(allow_empty_file=False, use_url=False),
                                             write_only=True, required=False)
+
     class Meta:
         model = DrinkImage
         fields = ['image', 'uploaded_images']
@@ -26,16 +27,15 @@ class DrinkSerializer(serializers.ModelSerializer):
     creator = serializers.CharField(source='created_by.username', read_only=True)
 
     images = DrinkImageSerializer(many=True, read_only=True)
-    uploaded_images = serializers.ListField(child=serializers.ImageField(allow_empty_file=False, use_url=False),
-                                            write_only=True, required=False)
 
     class Meta:
         model = Drink
-        fields = ['uuid', 'name', 'description', 'price', 'is_publishable', 'creator', 'created_on', "images",
-                  "uploaded_images"]
+        fields = ['uuid', 'name', 'description', 'price', 'is_publishable', 'creator', 'created_on',
+                  "images", ]
         read_only_fields = ['uuid', 'creator', 'created_on']
 
     def create(self, validated_data):
+        # validated_data['name'] = self.initial_data.get('name')
         validated_data['uuid'] = create_uuid()
         validated_data['created_by'] = self.context.get('user')
 
